@@ -1,11 +1,6 @@
 function PredictionTable({ rows, loading }) {
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!rows || rows.length === 0) {
-    return <div style={{ color: "#475569" }}>No results yet.</div>;
-  }
+  if (loading) return <div>Loading...</div>;
+  if (!rows || rows.length === 0) return <div style={{ color: "#475569" }}>No results yet.</div>;
 
   return (
     <div style={{ overflowX: "auto" }}>

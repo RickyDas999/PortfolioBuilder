@@ -1,6 +1,17 @@
-function TickerForm() {
+function TickerForm({ loading, onSubmit }) {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    onSubmit({
+      ticker: formData.get("ticker") || "",
+      period: formData.get("period") || "6mo",
+      model: formData.get("model") || "logreg",
+    });
+  };
+
   return (
     <form
+      onSubmit={handleSubmit}
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
@@ -17,6 +28,9 @@ function TickerForm() {
             borderRadius: "6px",
           }}
           placeholder="AAPL"
+          name="ticker"
+          defaultValue="AAPL"
+          required
         />
       </label>
 
@@ -29,6 +43,7 @@ function TickerForm() {
             borderRadius: "6px",
           }}
           defaultValue="6mo"
+          name="period"
         >
           <option value="1mo">1 month</option>
           <option value="3mo">3 months</option>
@@ -46,6 +61,7 @@ function TickerForm() {
             borderRadius: "6px",
           }}
           defaultValue="logreg"
+          name="model"
         >
           <option value="logreg">Logistic Regression</option>
           <option value="rf">Random Forest</option>
@@ -53,7 +69,8 @@ function TickerForm() {
       </label>
 
       <button
-        type="button"
+        type="submit"
+        disabled={loading}
         style={{
           padding: "10px 14px",
           background: "#0ea5e9",
@@ -61,10 +78,10 @@ function TickerForm() {
           border: "none",
           borderRadius: "6px",
           fontWeight: 600,
-          cursor: "pointer",
+          cursor: loading ? "not-allowed" : "pointer",
         }}
       >
-        Analyze (wire to backend)
+        {loading ? "Analyzing..." : "Analyze"}
       </button>
     </form>
   );

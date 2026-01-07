@@ -4,8 +4,34 @@ import StockChart from "./components/StockChart";
 import PredictionTable from "./components/PredictionTable";
 
 function App() {
-  const [rows] = useState([]); // placeholder for backend rows
-  const [metrics] = useState(null); // placeholder for backend metrics
+  const [rows, setRows] = useState([]);
+  const [metrics, setMetrics] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleAnalyze = async ({ ticker, period, model }) => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("http://localhost:8000/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticker, period, model }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || "Request failed");
+      }
+      setRows(data.rows || []);
+      setMetrics(data.metrics || null);
+    } catch (err) {
+      setError(err.message);
+      setRows([]);
+      setMetrics(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
@@ -24,14 +50,31 @@ function App() {
       </header>
 
       <section style={{ marginBottom: "16px" }}>
-        <TickerForm />
+        <TickerForm loading={loading} onSubmit={handleAnalyze} />
       </section>
+
+      {error && (
+        <div style={{ color: "#b91c1c", marginBottom: "12px" }}>{error}</div>
+      )}
 
       <section style={{ marginBottom: "16px" }}>
         <h2 style={{ marginBottom: "8px" }}>Metrics</h2>
         <div style={{ color: "#475569" }}>
-          {/* replace with metric cards once backend is wired */}
-          {metrics ? "metrics go here" : "No metrics yet."}
+          {metrics ? (
+            <pre
+              style={{
+                background: "#f8fafc",
+                padding: "8px",
+                borderRadius: "6px",
+                border: "1px solid #e2e8f0",
+                overflowX: "auto",
+              }}
+            >
+              {JSON.stringify(metrics, null, 2)}
+            </pre>
+          ) : (
+            "No metrics yet."
+          )}
         </div>
       </section>
 
@@ -44,7 +87,7 @@ function App() {
 
       <section>
         <h2 style={{ marginBottom: "8px" }}>Predictions</h2>
-        <PredictionTable rows={rows} loading={false} />
+        <PredictionTable rows={rows} loading={loading} />
       </section>
     </div>
   );

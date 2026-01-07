@@ -10,6 +10,8 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
 )
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
 def fetch_price_data(ticker: str, period: str = "6mo"):
     data = yf.download(ticker, period=period, interval="1d", auto_adjust=True)
@@ -38,7 +40,13 @@ def train_model(features: pd.DataFrame, target: pd.Series, model_name: str = "lo
             n_jobs=-1,
         )
     else:
-        model = LogisticRegression()
+        model = make_pipeline(
+            StandardScaler(),
+            LogisticRegression(
+                class_weight="balanced",
+                max_iter=500,
+            ),
+        )
     model.fit(features, target)
     return model
 
