@@ -2,6 +2,7 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 
 def fetch_price_data(ticker: str, period: str = "6mo"):
     data = yf.download(ticker, period=period, interval="1d", auto_adjust=True)
@@ -21,8 +22,16 @@ def build_features(df: pd.DataFrame):
     target = df["target_up"]
     return features, target, df
 
-def train_model(features: pd.DataFrame, target: pd.Series):
-    model = LogisticRegression()
+def train_model(features: pd.DataFrame, target: pd.Series, model_name: str = "logreg"):
+    if model_name == "rf":
+        model = RandomForestClassifier(
+            n_estimators=200,
+            max_depth=6,
+            random_state=42,
+            n_jobs=-1,
+        )
+    else:
+        model = LogisticRegression()
     model.fit(features, target)
     return model
 

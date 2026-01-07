@@ -16,10 +16,19 @@ app.add_middleware(
 class TickerRequest(BaseModel):
     ticker: str
     period: str = "6mo"
+    model: str = "logreg"
 
 @app.post("/api/analyze")
 def analyze_stock(req: TickerRequest):
-    df = fetch_price_data(req.ticker, req.period)
+    ticker = req.ticker.strip()
+    if not ticker:
+        raise HTTPException(status_code=400, detail="Ticker is required")
+
+    model_name = req.model.lower()
+    if model_name not in {"logreg", "rf"}:
+        raise HTTPException(status_code=400, detail="Invalid model; choose logreg or rf")
+
+    df = fetch_price_data(ticker, req.period)
     if df.empty:
         raise HTTPException(status_code=400, detail="No data for ticker")
 
@@ -31,7 +40,7 @@ def analyze_stock(req: TickerRequest):
     X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
     y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
 
-    model = train_model(X_train, y_train)
+    model = train_model(X_train, y_train, model_name=model_name)
     preds, proba = make_predictions(model, X_test)
 
     accuracy = float((preds == y_test.values).mean())
@@ -47,8 +56,9 @@ def analyze_stock(req: TickerRequest):
         })
 
     return {
-        "ticker": req.ticker.upper(),
+        "ticker": ticker.upper(),
         "period": req.period,
+        "model": model_name,
         "accuracy": accuracy,
         "rows": response_rows,
     }
