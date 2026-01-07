@@ -59,23 +59,59 @@ function App() {
 
       <section style={{ marginBottom: "16px" }}>
         <h2 style={{ marginBottom: "8px" }}>Metrics</h2>
-        <div style={{ color: "#475569" }}>
-          {metrics ? (
-            <pre
+        {metrics ? (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+              gap: "10px",
+            }}
+          >
+            {[
+              { label: "Accuracy", value: metrics.accuracy },
+              { label: "Precision", value: metrics.precision },
+              { label: "Recall", value: metrics.recall },
+              { label: "F1", value: metrics.f1 },
+            ].map((m) => (
+              <div
+                key={m.label}
+                style={{
+                  padding: "10px",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "8px",
+                  background: "#f8fafc",
+                }}
+              >
+                <div style={{ color: "#64748b", fontSize: "13px" }}>
+                  {m.label}
+                </div>
+                <div style={{ fontWeight: 700, fontSize: "18px" }}>
+                  {m.value?.toFixed ? m.value.toFixed(2) : m.value}
+                </div>
+              </div>
+            ))}
+            <div
               style={{
-                background: "#f8fafc",
-                padding: "8px",
-                borderRadius: "6px",
+                padding: "10px",
                 border: "1px solid #e2e8f0",
-                overflowX: "auto",
+                borderRadius: "8px",
+                background: "#f8fafc",
               }}
             >
-              {JSON.stringify(metrics, null, 2)}
-            </pre>
-          ) : (
-            "No metrics yet."
-          )}
-        </div>
+              <div style={{ color: "#64748b", fontSize: "13px" }}>
+                Confusion (tp/fp/tn/fn)
+              </div>
+              <div style={{ fontWeight: 600 }}>
+                {metrics.tp}/{metrics.fp}/{metrics.tn}/{metrics.fn}
+              </div>
+              <div style={{ color: "#64748b", fontSize: "12px" }}>
+                Test rows: {metrics.test_rows}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ color: "#475569" }}>No metrics yet.</div>
+        )}
       </section>
 
       <section style={{ marginBottom: "16px" }}>
