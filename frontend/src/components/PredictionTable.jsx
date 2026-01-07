@@ -2,6 +2,11 @@ function PredictionTable({ rows, loading }) {
   if (loading) return <div>Loading...</div>;
   if (!rows || rows.length === 0) return <div style={{ color: "#475569" }}>No results yet.</div>;
 
+  const formatClose = (val) => (typeof val === "number" ? val.toFixed(2) : val);
+  const formatProb = (val) =>
+    typeof val === "number" ? `${(val * 100).toFixed(1)}%` : val;
+  const formatLabel = (val) => (val ? "Up" : "Down");
+
   return (
     <div style={{ overflowX: "auto" }}>
       <table
@@ -30,16 +35,16 @@ function PredictionTable({ rows, loading }) {
                 {row.date}
               </td>
               <td style={{ padding: "8px", borderBottom: "1px solid #e2e8f0" }}>
-                {row.close}
+                {formatClose(row.close)}
               </td>
               <td style={{ padding: "8px", borderBottom: "1px solid #e2e8f0" }}>
-                {row.pred_up}
+                {formatLabel(row.pred_up)}
               </td>
               <td style={{ padding: "8px", borderBottom: "1px solid #e2e8f0" }}>
-                {row.prob_up}
+                {formatProb(row.prob_up)}
               </td>
               <td style={{ padding: "8px", borderBottom: "1px solid #e2e8f0" }}>
-                {row.actual_up}
+                {formatLabel(row.actual_up)}
               </td>
             </tr>
           ))}
