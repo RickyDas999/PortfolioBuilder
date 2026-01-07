@@ -1,3 +1,6 @@
+import time
+from typing import Dict, Tuple
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -24,6 +27,10 @@ class TickerRequest(BaseModel):
     period: str = "6mo"
     model: str = "logreg"
 
+CACHE_TTL_SECONDS = 300
+CacheKey = Tuple[str, str, str]
+cache: Dict[CacheKey, Tuple[float, dict]] = {}
+
 @app.post("/api/analyze")
 def analyze_stock(req: TickerRequest):
     ticker = req.ticker.strip()
@@ -33,6 +40,13 @@ def analyze_stock(req: TickerRequest):
     model_name = req.model.lower()
     if model_name not in {"logreg", "rf"}:
         raise HTTPException(status_code=400, detail="Invalid model; choose logreg or rf")
+
+    cache_key: CacheKey = (ticker.upper(), req.period, model_name)
+    now = time.time()
+    if cache_key in cache:
+        ts, cached_value = cache[cache_key]
+        if now - ts <= CACHE_TTL_SECONDS:
+            return cached_value
 
     df = fetch_price_data(ticker, req.period)
     if df.empty:
@@ -61,7 +75,7 @@ def analyze_stock(req: TickerRequest):
             "actual_up": int(y_test.loc[idx]),
         })
 
-    return {
+    response = {
         "ticker": ticker.upper(),
         "period": req.period,
         "model": model_name,
@@ -69,3 +83,5 @@ def analyze_stock(req: TickerRequest):
         "metrics": metrics,
         "rows": response_rows,
     }
+    cache[cache_key] = (now, response)
+    return response
