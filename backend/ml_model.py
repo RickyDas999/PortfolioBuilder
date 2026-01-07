@@ -3,6 +3,13 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 
 def fetch_price_data(ticker: str, period: str = "6mo"):
     data = yf.download(ticker, period=period, interval="1d", auto_adjust=True)
@@ -39,3 +46,17 @@ def make_predictions(model, features: pd.DataFrame):
     proba = model.predict_proba(features)[:, 1]
     preds = (proba >= 0.5).astype(int)
     return preds, proba
+
+def compute_metrics(y_true: pd.Series, y_pred: np.ndarray):
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
+    return {
+        "accuracy": float(accuracy_score(y_true, y_pred)),
+        "precision": float(precision_score(y_true, y_pred, zero_division=0)),
+        "recall": float(recall_score(y_true, y_pred, zero_division=0)),
+        "f1": float(f1_score(y_true, y_pred, zero_division=0)),
+        "tp": int(tp),
+        "fp": int(fp),
+        "tn": int(tn),
+        "fn": int(fn),
+        "test_rows": int(len(y_true)),
+    }

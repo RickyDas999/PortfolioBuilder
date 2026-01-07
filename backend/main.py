@@ -1,7 +1,13 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from ml_model import fetch_price_data, build_features, train_model, make_predictions
+from ml_model import (
+    build_features,
+    compute_metrics,
+    fetch_price_data,
+    make_predictions,
+    train_model,
+)
 
 app = FastAPI()
 
@@ -42,8 +48,8 @@ def analyze_stock(req: TickerRequest):
 
     model = train_model(X_train, y_train, model_name=model_name)
     preds, proba = make_predictions(model, X_test)
-
-    accuracy = float((preds == y_test.values).mean())
+    metrics = compute_metrics(y_test, preds)
+    accuracy = metrics["accuracy"]
 
     response_rows = []
     for i, idx in enumerate(X_test.index):
@@ -60,5 +66,6 @@ def analyze_stock(req: TickerRequest):
         "period": req.period,
         "model": model_name,
         "accuracy": accuracy,
+        "metrics": metrics,
         "rows": response_rows,
     }
